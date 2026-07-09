@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="Asror Botirov - Frontend Developer, UI Designer and Digital Creator.">
+    <title>Asror Botirov | 3D Digital Profile</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #050505;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent: #2563eb;
+            --accent-glow: #60a5fa;
+            --text: #ffffff;
+            --muted: #8892b0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        body::-webkit-scrollbar { display: none; }
+        body { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* 3D Canvas Background */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* Mobile Container */
+        .app-container {
+            position: relative;
+            width: 100%;
+            max-width: 430px;
+            margin: 0 auto;
+            padding: 60px 20px 80px;
+            perspective: 1000px; /* Crucial for 3D tilt */
+        }
+
+        /* Header 3D Profile */
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+        }
+
+        .profile-wrapper {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            margin: 0 auto 25px;
+            transform-style: preserve-3d;
+        }
+
+        .profile-glow {
+            position: absolute;
+            inset: -20px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.4), transparent 70%);
+            filter: blur(20px);
+            z-index: -1;
+            animation: pulse 4s infinite alternate;
+        }
+
+        .profile-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.2);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            background: #111;
+            transform: translateZ(50px); /* Pops out in 3D */
+        }
+
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            text-transform: uppercase;
+            background: linear-gradient(to bottom, #fff, #a0a0a0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transform: translateZ(30px);
+            display: inline-block;
+        }
+
+        .description {
+            font-size: 0.9rem;
+            color: var(--muted);
+            line-height: 1.6;
+            margin-top: 15px;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
+            transform: translateZ(20px);
+        }
+
+        /* 3D Tilt Cards */
+        .tilt-card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text);
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .tilt-card:active {
+            box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
+        }
+
+        /* Shine overlay */
+        .tilt-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.05) 50%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tilt-card:hover::after { opacity: 1; }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            color: var(--accent-glow);
+            transform: translateZ(30px); /* Icon pops out */
+        }
+
+        .card-info h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            transform: translateZ(40px);
+        }
+
+        .card-info p {
+            font-size: 0.85rem;
+            color: var(--muted);
+            transform: translateZ(20px);
+        }
+
+        /* Gallery 3D Grid */
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            margin: 40px 0 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            transform-style: preserve-3d;
+        }
+
+        .gallery-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #111;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease-out;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .gallery-item:active img {
+            transform: scale(1.1);
+        }
+
+        .gallery-item::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.6), transparent 50%);
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .gallery-item:active::before { opacity: 1; }
+
+        /* Lightbox */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(15px);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .lightbox.active { display: flex; opacity: 1; }
+        
+        .lightbox img {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        .lightbox.active img { transform: scale(1); }
+
+        footer {
+            margin-top: 60px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--muted);
+            opacity: 0.6;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(1.1); opacity: 0.8; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D WebGL Background -->
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="app-container" id="app">
+        
+        <header id="header-3d">
+            <div class="profile-wrapper">
+                <div class="profile-glow"></div>
+                <img src="profile.jpg" alt="Asror Botirov" class="profile-img" onerror="this.src='https://via.placeholder.com/200/000000/2563eb?text=AB';">
+            </div>
+            <h1>Asror<br>Botirov</h1>
+            <p class="description">
+                «Frontend Developer, UI Designer and Digital Creator. I build modern websites and digital solutions with clean design and smooth user experience.»
+            </p>
+        </header>
+
+        <!-- Contact Cards -->
+        <a href="https://www.instagram.com/asror.botir0v?igsh=anMzaDE1YzRwZm51" target="_blank" class="tilt-card" data-tilt>
+            <div class="card-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                </svg>
+            </div>
+            <div class="card-info">
+                <h2>Instagram</h2>
+                <p>@asror.botir0v</p>
+            </div>
+        </a>
+
+        <a href="https://t.me/asrorcodex" target="_blank" class="tilt-card" data-tilt>
+            <div class="card-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/>
+                </svg>
+            </div>
+            <div class="card-info">
+                <h2>Telegram</h2>
+                <p>@asrorcodex</p>
+            </div>
+        </a>
+
+        <a href="tel:+998983109929" class="tilt-card" data-tilt>
+            <div class="card-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                </svg>
+            </div>
+            <div class="card-info">
+                <h2>Phone</h2>
+                <p>+998 98 310 99 29</p>
+            </div>
+        </a>
+
+        <!-- Gallery -->
+        <div class="section-title">Gallery</div>
+        <div class="gallery-grid" id="gallery">
+            <div class="gallery-item" onclick="openLightbox('1.jpg')"><img src="1.jpg" alt="Gallery 1" onerror="this.src='https://via.placeholder.com/300/111111/2563eb?text=3D+Image+1';"></div>
+            <div class="gallery-item" onclick="openLightbox('2.jpg')"><img src="2.jpg" alt="Gallery 2" onerror="this.src='https://via.placeholder.com/300/111111/2563eb?text=3D+Image+2';"></div>
+            <div class="gallery-item" onclick="openLightbox('3.jpg')"><img src="3.jpg" alt="Gallery 3" onerror="this.src='https://via.placeholder.com/300/111111/2563eb?text=3D+Image+3';"></div>
+            <div class="gallery-item" onclick="openLightbox('4.jpg')"><img src="4.jpg" alt="Gallery 4" onerror="this.src='https://via.placeholder.com/300/111111/2563eb?text=3D+Image+4';"></div>
+            <div class="gallery-item" onclick="openLightbox('5.jpg')"><img src="5.jpg" alt="Gallery 5" onerror="this.src='https://via.placeholder.com/300/111111/2563eb?text=3D+Image+5';"></div>
+            <div class="gallery-item" onclick="openLightbox('6.jpg')"><img src="6.jpg" alt="Gallery 6" onerror="this.src='https://via.placeholder.com/300/111111/2563eb?text=3D+Image+6';"></div>
+        </div>
+
+        <footer>© 2026 Asror Botirov</footer>
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <img src="" id="lightbox-img" alt="Fullscreen View">
+    </div>
+
+    <!-- Three.js Library for 3D Background -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script>
+        // ==========================================
+        // 1. THREE.JS 3D BACKGROUND SETUP
+        // ==========================================
+        let scene, camera, renderer, particles, sphere;
+
+        function init3D() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 5;
+
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            // 3D Particles (Stars)
+            const particleGeometry = new THREE.BufferGeometry();
+            const particleCount = 1500;
+            const positions = new Float32Array(particleCount * 3);
+
+            for(let i = 0; i < particleCount * 3; i++) {
+                positions[i] = (Math.random() - 0.5) * 20;
+            }
+
+            particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const particleMaterial = new THREE.PointsMaterial({ color: 0x60a5fa, size: 0.02, transparent: true, opacity: 0.8 });
+            particles = new THREE.Points(particleGeometry, particleMaterial);
+            scene.add(particles);
+
+            // 3D Central Wireframe Sphere
+            const geometry = new THREE.IcosahedronGeometry(1.5, 1);
+            const material = new THREE.MeshBasicMaterial({ color: 0x2563eb, wireframe: true, transparent: true, opacity: 0.1 });
+            sphere = new THREE.Mesh(geometry, material);
+            scene.add(sphere);
+        }
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            
+            // Rotate based on scroll
+            particles.rotation.y = window.scrollY * 0.0005;
+            particles.rotation.x = window.scrollY * 0.0003;
+            
+            sphere.rotation.y = window.scrollY * 0.001;
+            sphere.rotation.x = window.scrollY * 0.0005;
+
+            renderer.render(scene, camera);
+        }
+
+        init3D();
+        animate3D();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // ==========================================
+        // 2. 3D TILT EFFECT FOR CARDS & HEADER
+        // ==========================================
+        const tiltElements = document.querySelectorAll('[data-tilt]');
+        const header = document.getElementById('header-3d');
+
+        function handleTilt(e, el, intensity = 15) {
+            const rect = el.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const cx = rect.width / 2;
+            const cy = rect.height / 2;
+            
+            const rotateX = ((y - cy) / cy) * -intensity;
+            const rotateY = ((x - cx) / cx) * intensity;
+            
+            el.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+        }
+
+        function resetTilt(el) {
+            el.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+        }
+
+        // Desktop Mouse effect
+        tiltElements.forEach(card => {
+            card.addEventListener('mousemove', (e) => handleTilt(e, card, 10));
+            card.addEventListener('mouseleave', () => resetTilt(card));
+        });
+
+        // Mobile Device Gyroscope / Touch effect for Header
+        window.addEventListener('deviceorientation', (e) => {
+            if (e.beta !== null && e.gamma !== null) {
+                const rotateX = (e.beta - 45) / 2; // Front-back tilt
+                const rotateY = e.gamma / 2;       // Left-right tilt
+                if (header) {
+                    header.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                }
+            }
+        });
+
+        // ==========================================
+        // 3. LIGHTBOX LOGIC
+        // ==========================================
+        function openLightbox(src) {
+            const lightbox = document.getElementById('lightbox');
+            const img = document.getElementById('lightbox-img');
+            
+            img.onerror = function() {
+                this.src = 'https://via.placeholder.com/800/000000/FFFFFF?text=Image+Not+Found';
+            };
+            
+            img.src = src;
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+    </script>
+</body>
+                  </html>
